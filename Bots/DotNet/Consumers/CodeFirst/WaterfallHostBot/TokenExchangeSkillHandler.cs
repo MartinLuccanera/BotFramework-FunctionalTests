@@ -93,7 +93,7 @@ namespace Microsoft.BotFrameworkFunctionalTests.WaterfallHostBot
                 return null;
             }
 
-            return _skillsConfig.Skills.Values.FirstOrDefault(s => string.Equals(s.AppId, appId, StringComparison.InvariantCultureIgnoreCase));
+            return _skillsConfig.Skills.Values.FirstOrDefault(s => string.Equals(s.AppId, appId, StringComparison.OrdinalIgnoreCase));
         }
 
         private async Task<bool> InterceptOAuthCards(ClaimsIdentity claimsIdentity, Activity activity)

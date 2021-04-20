@@ -97,7 +97,7 @@ if (Test-Path $zipPath) {
 }
 
 # Perform dotnet publish step ahead of zipping up
-$publishFolder = $(Join-Path $projFolder 'bin\Release\netcoreapp3.1')
+$publishFolder = $(Join-Path $projFolder 'bin\Release\netcoreapp5.0')
 dotnet publish -c release -o $publishFolder -v q --self-contained true -r $runtimeIdentifier > $logFile
 
 if($?) {

@@ -16,7 +16,6 @@ namespace Microsoft.BotFrameworkFunctionalTests.WaterfallHostBot.Bots
     public class RootBot<T> : ActivityHandler
         where T : Dialog
     {
-        private readonly IStatePropertyAccessor<BotFrameworkSkill> _activeSkillProperty;
         private readonly ConversationState _conversationState;
         private readonly Dialog _mainDialog;
 
