@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+const http = require('http');
+const https = require('https');
 const dotenv = require('dotenv');
 const path = require('path');
 const restify = require('restify');
@@ -24,6 +26,12 @@ const { SkillConversationIdFactory } = require('./skillConversationIdFactory');
 const server = restify.createServer({ maxParamLength: 1000 });
 server.use(restify.plugins.queryParser());
 
+const maxTotalSockets = (preallocatedSnatPorts, procCount = 1, weight = 0.5, overcommit = 1.1) =>
+    Math.min(
+        Math.floor((preallocatedSnatPorts / procCount) * weight * overcommit),
+        preallocatedSnatPorts
+    );
+
 server.listen(process.env.port || process.env.PORT || 36420, () => {
   console.log(`\n${server.name} listening to ${server.url}`);
   console.log('\nGet Bot Framework Emulator: https://aka.ms/botframework-emulator');
@@ -37,7 +45,19 @@ const authConfig = new AuthenticationConfiguration([], allowedCallersClaimsValid
 const adapter = new BotFrameworkAdapter({
   appId: process.env.MicrosoftAppId,
   appPassword: process.env.MicrosoftAppPassword,
-  authConfig
+  authConfig,
+  clientOptions: {
+    agentSettings: {
+      http: new http.Agent({
+        keepAlive: true,
+        maxTotalSockets: maxTotalSockets(1024, 4, 0.3),
+      }),
+      https: new https.Agent({
+        keepAlive: true,
+        maxTotalSockets: maxTotalSockets(1024, 4, 0.7),
+      }),
+    },
+  }
 });
 
 // Catch-all for errors.

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+const http = require('http');
+const https = require('https');
 const dotenv = require('dotenv');
 const path = require('path');
 const restify = require('restify');
@@ -26,6 +28,12 @@ server.listen(process.env.port || process.env.PORT || 36400, () => {
   console.log('\nTo talk to your bot, open the emulator select "Open Bot"');
 });
 
+const maxTotalSockets = (preallocatedSnatPorts, procCount = 1, weight = 0.5, overcommit = 1.1) =>
+    Math.min(
+        Math.floor((preallocatedSnatPorts / procCount) * weight * overcommit),
+        preallocatedSnatPorts
+    );
+
 // Expose the manifest
 server.get('/manifests/*', restify.plugins.serveStatic({ directory: './manifests', appendRequestPath: false }));
 
@@ -34,7 +42,19 @@ server.get('/manifests/*', restify.plugins.serveStatic({ directory: './manifests
 const adapter = new BotFrameworkAdapter({
   appId: process.env.MicrosoftAppId,
   appPassword: process.env.MicrosoftAppPassword,
-  authConfig: new AuthenticationConfiguration([], allowedCallersClaimsValidator)
+  authConfig: new AuthenticationConfiguration([], allowedCallersClaimsValidator),
+  clientOptions: {
+    agentSettings: {
+      http: new http.Agent({
+        keepAlive: true,
+        maxTotalSockets: maxTotalSockets(1024, 4, 0.3),
+      }),
+      https: new https.Agent({
+        keepAlive: true,
+        maxTotalSockets: maxTotalSockets(1024, 4, 0.7),
+      }),
+    },
+  }
 });
 
 // Catch-all for errors.
